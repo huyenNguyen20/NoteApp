@@ -1,12 +1,31 @@
 import {useState} from "react"
 import { useRouter } from "next/router"
 import Layout from "../components/layout"
-import utilStyles from "../styles/utils.module.css"
+//import utilStyles from "../styles/utils.module.css"
 import Head from "next/head"
+import TextField from '@material-ui/core/TextField';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import Button from "@material-ui/core/Button"
+import Grid from "@material-ui/core/Grid"
+import FormControl from '@material-ui/core/FormControl';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Link from "next/link"
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    textField: {
+        marginBottom: theme.spacing(5)
+    }
+  }),
+);
 
 const Note = () => {
-    const router = useRouter()
-    const [Values, setValues] = useState({ title: '', body: '' });
+    const classes = useStyles();
+    const [Values, setValues] = useState({ title: '', body: '', open: false, message: "", id: "" });
     const handleChange = name => event => {
         setValues({ ...Values, [name]: event.target.value })
     }
@@ -20,11 +39,11 @@ const Note = () => {
         postNote(note)
         .then(res => {
             if(res.status === 201){
-                alert("Note was created successfully")
-                res.json().then(data => router.push(`/notes/${data}`))
+                res.json().then(data => {
+                    setValues({...Values, open: true, message: "Note Was Created Successfully", id: data})
+                })
             } else {
-                alert("Something went wrong")
-                router.push("/")
+                setValues({...Values, open: true, message: "Something Went Wrong"})
             }
             
         })
@@ -54,40 +73,72 @@ const Note = () => {
             <Head>
                 <title>Create A Note</title>
             </Head>
-            <h1 style={{textAlign: "center"}}>Create A Note</h1>
-            <form className={utilStyles.note_form}>
-                <div className={utilStyles.note_form_title}>
-                    <input 
-                        value={Values.title}
-                        onChange={handleChange('title')}
-                        type="text" 
-                        name="title" 
-                        placeholder="Title goes here" 
-                        required
-                    />
-                </div>
-                
-                <div className={utilStyles.note_form_body}>
-                <textarea
-                    value={Values.body}
-                    onChange={handleChange('body')} 
-                    name="body" 
-                    rows={10} 
-                    cols={10} 
-                    required
-                > 
-                </textarea>
-                </div>
-                
-                <div>
-                <input 
-                    type="submit" 
-                    value="Save Note"
-                    onClick={clickSubmit}
-                ></input>
-                </div>
-                
-            </form>
+            <Grid container>
+                <Grid item xs={1} md={2} />
+                <Grid item xs={10} md={8}>
+                    <FormControl fullWidth className={classes.textField}>
+                        
+                        <TextField
+                            variant="outlined"
+                            label="Title" 
+                            value={Values.title}
+                            onChange={handleChange('title')}
+                            type="text" 
+                            required
+                        />
+                    </FormControl>
+                   
+                </Grid>
+                <Grid item xs={1} md={2}/>
+                <Grid item xs={1} md={2} />
+                <Grid item xs={10} md={8}>
+                    <FormControl fullWidth className={classes.textField}>
+                        <TextField
+                            variant="outlined"
+                            label="Description"
+                            multiline
+                            rows={6}
+                            value={Values.body}
+                            onChange={handleChange('body')} 
+                            required
+                        /> 
+                    </FormControl>
+                </Grid>
+                <Grid item xs={1} md={2}/>
+                <Grid item xs={1} md={2}/>
+                <Grid item xs={10} md={8}>
+                    <FormControl fullWidth className={classes.textField}>
+                        <Button 
+                            variant="contained"
+                            color="primary"
+                            onClick={clickSubmit}
+                        >
+                            Save Note
+                        </Button>
+                    </FormControl>
+                </Grid>
+                <Grid item xs={1} md={2}/>
+                <Grid item xs={1} md={2}/>
+            </Grid>
+            <Dialog
+                open={Values.open}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+                >
+                <DialogTitle id="alert-dialog-title">{"NoteApp Notification"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                    {Values.message}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button color="primary" autoFocus>
+                        <Link href={Values.id ? `/notes/${Values.id}` : `/`}> 
+                            Agree
+                        </Link>
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Layout>
         
     )
